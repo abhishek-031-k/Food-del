@@ -8,7 +8,7 @@ dotenv.config();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const placeOrder = async (req, res) => {
-  const frontend_url = "http://localhost:5173";
+  const frontend_url = "https://food-del-frontend.netlify.app";
 
   try {
     const userId = req.user.id || req.user.userId;
@@ -118,3 +118,4 @@ res.json({success:false,message:"Error"})
 }
 
 export { placeOrder,verifyOrder,userOrders,listOrders,updateStatus};
+
