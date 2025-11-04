@@ -7,10 +7,6 @@ import 'dotenv/config'
 import cartRouter from "./routes/cartRoute.js"
 import orderRouter from "./routes/orderRoute.js"
 
-app.get("/test", (req, res) => {
-  res.send("Test route working!");
-});
-
 
 
 //app config
@@ -32,6 +28,12 @@ app.use("/api/user",userRouter)
 app.use("/api/cart",cartRouter)
 app.use("/api/order",orderRouter)
 
+app.get("/test", (req, res) => {
+  res.send("Test route working!");
+});
+
+
+
 
 app.get("/",(req,res)=>{
     res.send("API Working")
@@ -40,6 +42,7 @@ app.get("/",(req,res)=>{
 app.listen(port, ()=>{
     console.log(`Server Started on http://localhost:${port}`)
 })
+
 
 
 
