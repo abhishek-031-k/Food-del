@@ -32,18 +32,18 @@ app.use(cors({
   credentials: true
 }));
 
-// Database
+// Connect to MongoDB
 connectDB();
 
 // Routes
+app.get("/", (req, res) => res.send("API Working")); // root route
+app.get("/test", (req, res) => res.send("Test route working!")); // test route
+
 app.use("/api/food", foodRouter);
 app.use("/images", express.static('uploads'));
 app.use("/api/user", userRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
-
-// Test route
-app.get("/test", (req, res) => res.send("Test route working!"));
 
 // Global error handler
 app.use((err, req, res, next) => {
