@@ -15,7 +15,7 @@ app.use(express.json());
 
 // ✅ CORS configuration
 const allowedOrigins = [
-  "https://heartfelt-piroshki-c6a964.netlify.app", // your deployed frontend
+  "https://rainbow-jelly-47aeb1.netlify.app/", // your deployed frontend
   "http://localhost:5173"                           // local dev frontend
 ];
 
@@ -53,3 +53,4 @@ app.use((err, req, res, next) => {
 
 // Start server
 app.listen(port, () => console.log(`Server running on port ${port}`));
+
