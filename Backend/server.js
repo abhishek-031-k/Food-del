@@ -1,56 +1,63 @@
 import express from "express";
 import cors from "cors";
-import { connectDB } from "./config/db.js";
+import mongoose from "mongoose";
 import foodRouter from "./routes/foodRoute.js";
 import userRouter from "./routes/userRoute.js";
 import cartRouter from "./routes/cartRoute.js";
 import orderRouter from "./routes/orderRoute.js";
-import 'dotenv/config';
+import "dotenv/config";
 
 const app = express();
-const port = process.env.PORT || 4000;
+const PORT = process.env.PORT || 10000;
 
-// Middleware
+/* -------------------- MIDDLEWARE -------------------- */
 app.use(express.json());
 
-// ✅ CORS configuration
-const allowedOrigins = [
-  "https://rainbow-jelly-47aeb1.netlify.app/", // your deployed frontend
-  "http://localhost:5173"                           // local dev frontend
-];
-
+/*
+  ✅ CORS – DO NOT hardcode frontend URLs
+  This avoids infinite redeploy loops
+*/
 app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  origin: true,          // allow all origins safely
+  credentials: true,
   methods: ["GET","POST","PUT","DELETE","OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "token"],
-  credentials: true
+  allowedHeaders: ["Content-Type", "Authorization", "token"]
 }));
 
-// Connect to MongoDB
-connectDB();
+/* -------------------- DATABASE -------------------- */
+if (!process.env.MONGO_URL) {
+  console.error(" MONGO_URL missing");
+  process.exit(1);
+}
 
-// Routes
-app.get("/", (req, res) => res.send("API Working")); // root route
-app.get("/test", (req, res) => res.send("Test route working!")); // test route
+mongoose
+  .connect(process.env.MONGO_URL)
+  .then(() => console.log(" MongoDB Connected"))
+  .catch((err) => {
+    console.error(" MongoDB Error:", err.message);
+    process.exit(1);
+  });
+
+/* -------------------- ROUTES -------------------- */
+app.get("/", (req, res) => {
+  res.send("API is working ");
+});
 
 app.use("/api/food", foodRouter);
-app.use("/images", express.static('uploads'));
 app.use("/api/user", userRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
 
-// Global error handler
+/* -------------------- ERROR HANDLER -------------------- */
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ success: false, message: err.message });
+  res.status(500).json({
+    success: false,
+    message: err.message
+  });
 });
 
-// Start server
-app.listen(port, () => console.log(`Server running on port ${port}`));
-
+/* -------------------- START SERVER -------------------- */
+app.listen(PORT, () => {
+  console.log(` Server running on port ${PORT}`);
+});
