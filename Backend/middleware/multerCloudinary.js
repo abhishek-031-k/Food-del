@@ -5,10 +5,11 @@ import cloudinary from "../config/cloudinaryConfig.js";
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: "foodImages",
-    allowed_formats: ["jpg", "jpeg", "png"],
+    folder: "food-images",
+    allowed_formats: ["jpg", "png", "jpeg"],
   },
 });
 
 const upload = multer({ storage });
+
 export default upload;
