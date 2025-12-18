@@ -10,19 +10,16 @@ import "dotenv/config";
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-/* -------------------- MIDDLEWARE -------------------- */
 app.use(express.json());
 
-/*
-  ✅ CORS – DO NOT hardcode frontend URLs
-  This avoids infinite redeploy loops
-*/
-app.use(cors({
-  origin: true,          // allow all origins safely
-  credentials: true,
-  methods: ["GET","POST","PUT","DELETE","OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "token"]
-}));
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "token"],
+  })
+);
 
 /* -------------------- DATABASE -------------------- */
 if (!process.env.MONGO_URL) {
@@ -40,7 +37,7 @@ mongoose
 
 /* -------------------- ROUTES -------------------- */
 app.get("/", (req, res) => {
-  res.send("API is working ");
+  res.send("API is working");
 });
 
 app.use("/api/food", foodRouter);
@@ -53,7 +50,7 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
     success: false,
-    message: err.message
+    message: err.message,
   });
 });
 
