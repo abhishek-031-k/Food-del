@@ -5,7 +5,7 @@
     },
     {
       "src": "/api/(.*)",
-      "dest": "https://YOUR-BACKEND.onrender.com/api/$1"
+      "dest": "https://food-del-21.onrender.com/api/$1"
     },
     {
       "src": "/(.*)",
