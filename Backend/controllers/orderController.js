@@ -12,6 +12,7 @@ const placeOrder = async (req, res) => {
 
   try {
     const userId = req.user.id || req.user.userId;
+
     const newOrder = new orderModel({
       userId,
       items: req.body.items,
@@ -20,13 +21,12 @@ const placeOrder = async (req, res) => {
     });
 
     await newOrder.save();
-    await userModel.findByIdAndUpdate(userId, { cartData: {} });
 
     const line_items = req.body.items.map((item) => ({
       price_data: {
         currency: "inr",
         product_data: { name: item.name },
-        unit_amount: Math.round(item.price *83* 100),
+        unit_amount: Math.round(item.price * 83 * 100),
       },
       quantity: item.quantity,
     }));
@@ -48,9 +48,13 @@ const placeOrder = async (req, res) => {
       cancel_url: `${frontend_url}/verify?success=false&orderId=${newOrder._id}`,
     });
 
-    res.json({ success: true, session_url: session.url });
+    res.json({
+      success: true,
+      session_url: session.url,
+    });
   } catch (error) {
     console.error("Stripe error:", error.message);
+
     res.json({
       success: false,
       message: "Error creating Stripe session",
@@ -59,67 +63,108 @@ const placeOrder = async (req, res) => {
   }
 };
 
-const verifyOrder = async(req,res)=>{
-   const {orderId,success} = req.body;
-  try{
-    if(success == "true"){
-    await orderModel.findByIdAndUpdate(orderId,{payment:true});
-    res.json({success:true,message:"Paid"});
-   }
-   else{
-    await orderModel.findByIdAndDelete(orderId);
-    res.json({success:false,message:"Not paid"})
-   }
+const verifyOrder = async (req, res) => {
+  const { orderId, success } = req.body;
+
+  try {
+    if (success == "true") {
+      const order = await orderModel.findByIdAndUpdate(
+        orderId,
+        { payment: true },
+        { new: true }
+      );
+
+      await userModel.findByIdAndUpdate(order.userId, {
+        cartData: {},
+      });
+
+      res.json({
+        success: true,
+        message: "Paid",
+      });
+    } else {
+      await orderModel.findByIdAndDelete(orderId);
+
+      res.json({
+        success: false,
+        message: "Not paid",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+
+    res.json({
+      success: false,
+      message: "Error",
+    });
   }
-   catch(error){
-   console.log();
-   res.json({success:false,message:"Error"})
-   }
-}
+};
 
-// user orders for frontend
+// User orders for frontend
+const userOrders = async (req, res) => {
+  try {
+    const orders = await orderModel.find({
+      userId: req.user.userId,
+    });
 
-const userOrders = async(req, res)=>{
- try{
- const orders = await orderModel.find({userId:req.user.userId})
- res.json({success:true,data:orders})
- }
- catch(error){
- console.log(error);
- res.json({success:false,message:"Error"})
- 
- }
-}
+    res.json({
+      success: true,
+      data: orders,
+    });
+  } catch (error) {
+    console.log(error);
 
-// listing order for admin panel
+    res.json({
+      success: false,
+      message: "Error",
+    });
+  }
+};
 
-const listOrders = async(req, res) =>{
-try{
-  const orders = await orderModel.find({});
-  res.json({success:true,data:orders})
-}
-catch(error){
-  console.log(error);
-  res.json({success:false,message:"Error"})
-}
-}
+// Listing orders for admin panel
+const listOrders = async (req, res) => {
+  try {
+    const orders = await orderModel.find({});
 
-// api for updating order status
-const updateStatus = async(req, res)=>{
-try{
-await orderModel.findByIdAndUpdate(req.body.orderId,{status:req.body.status})
-res.json({success:true,message:"Status Updated"})
-}
-catch(error){
-console.log(error);
-res.json({success:false,message:"Error"})
+    res.json({
+      success: true,
+      data: orders,
+    });
+  } catch (error) {
+    console.log(error);
 
-}
-}
+    res.json({
+      success: false,
+      message: "Error",
+    });
+  }
+};
 
-export { placeOrder,verifyOrder,userOrders,listOrders,updateStatus};
+// API for updating order status
+const updateStatus = async (req, res) => {
+  try {
+    await orderModel.findByIdAndUpdate(req.body.orderId, {
+      status: req.body.status,
+    });
 
+    res.json({
+      success: true,
+      message: "Status Updated",
+    });
+  } catch (error) {
+    console.log(error);
 
+    res.json({
+      success: false,
+      message: "Error",
+    });
+  }
+};
 
-
-
+export {
+  placeOrder,
+  verifyOrder,
+  userOrders,
+  listOrders,
+  updateStatus,
+};
