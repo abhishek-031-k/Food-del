@@ -3,68 +3,70 @@ const buckets = new Map();
 const CAPACITY = 5;
 const REFILL_RATE = 0.2; // 1 token every 5 seconds
 
-const tokenBucketRateLimiter = (req, res, next) => {
+const tokenBucketRateLimiter = (type) => {
 
-    // Get client IP
-    const forwardedFor = req.headers["x-forwarded-for"];
+    return (req, res, next) => {
 
-    const ip = forwardedFor
-        ? forwardedFor.split(",")[0].trim()
-        : req.ip;
+        // Get client IP
+        const forwardedFor = req.headers["x-forwarded-for"];
 
-    console.log("================================");
-    console.log("RATE LIMITER HIT");
-    console.log("IP:", ip);
+        const ip = forwardedFor
+            ? forwardedFor.split(",")[0].trim()
+            : req.ip;
 
-    const now = Date.now();
+        /*
+            Separate bucket for each IP + endpoint
 
-    let bucket = buckets.get(ip);
+            Example:
+            ::1-login
+            ::1-register
+        */
+        const key = `${ip}-${type}`;
 
-    // Create bucket for new IP
-    if (!bucket) {
+        const now = Date.now();
 
-        bucket = {
-            tokens: CAPACITY,
-            lastRefill: now
-        };
+        let bucket = buckets.get(key);
 
-        buckets.set(ip, bucket);
+        // Create new bucket
+        if (!bucket) {
 
-        console.log("NEW BUCKET CREATED");
-    }
+            bucket = {
+                tokens: CAPACITY,
+                lastRefill: now
+            };
 
-    // Calculate elapsed time
-    const elapsedTime =
-        (now - bucket.lastRefill) / 1000;
+            buckets.set(key, bucket);
+        }
 
-    // Refill tokens
-    bucket.tokens = Math.min(
-        CAPACITY,
-        bucket.tokens + elapsedTime * REFILL_RATE
-    );
+        // Calculate elapsed time
+        const elapsedTime =
+            (now - bucket.lastRefill) / 1000;
 
-    bucket.lastRefill = now;
+        // Refill tokens
+        bucket.tokens = Math.min(
+            CAPACITY,
+            bucket.tokens + elapsedTime * REFILL_RATE
+        );
 
-    console.log("TOKENS BEFORE REQUEST:", bucket.tokens);
+        bucket.lastRefill = now;
 
-    // Check if token is available
-    if (bucket.tokens < 1) {
+        // No token available
+        if (bucket.tokens < 1) {
 
-        console.log("❌ RATE LIMIT EXCEEDED");
+            return res.status(429).json({
+                success: false,
+                message:
+                    type === "login"
+                        ? "Too many login attempts. Please try again later."
+                        : "Too many registration attempts. Please try again later."
+            });
+        }
 
-        return res.status(429).json({
-            success: false,
-            message: "Too many login attempts. Please try again later."
-        });
-    }
+        // Consume one token
+        bucket.tokens -= 1;
 
-    // Consume one token
-    bucket.tokens -= 1;
-
-    console.log("TOKENS AFTER REQUEST:", bucket.tokens);
-    console.log("✅ REQUEST ALLOWED");
-
-    next();
+        next();
+    };
 };
 
 export default tokenBucketRateLimiter;
