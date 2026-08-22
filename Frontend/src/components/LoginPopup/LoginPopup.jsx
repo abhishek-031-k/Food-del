@@ -22,28 +22,58 @@ const LoginPopup = ({setShowLogin}) => {
    setData(data=>({...data,[name]:value}))
    }
   
+const onLogin = async (event) => {
+  event.preventDefault();
 
- const onLogin = async(event) =>{
-  event.preventDefault()
-  let newUrl = url;
-  if(currState === "Login"){
-    newUrl += "/api/user/login"
+  try {
+
+    let newUrl = url;
+
+    if (currState === "Login") {
+      newUrl += "/api/user/login";
+    }
+    else {
+      newUrl += "/api/user/register";
+    }
+
+    const response = await axios.post(newUrl, data);
+
+    if (response.data.success) {
+
+      setToken(response.data.token);
+
+      localStorage.setItem(
+        "token",
+        response.data.token
+      );
+
+      setShowLogin(false);
+
+    }
+    else {
+      alert(response.data.message);
+    }
+
   }
-  else {
-    newUrl += "/api/user/register"
+  catch (error) {
+
+    if (error.response?.status === 429) {
+
+      alert(
+        error.response.data.message
+      );
+
+    }
+    else {
+
+      alert(
+        error.response?.data?.message ||
+        "Something went wrong. Please try again."
+      );
+
+    }
   }
-  const response = await axios.post(newUrl, data);
-
-   if(response.data.success){
-    setToken(response.data.token);
-    localStorage.setItem("token", response.data.token)
-    setShowLogin(false);
-   }
-   else {
-    alert(response.data.message);
-   }
-
- }
+};
 
 
   return (
