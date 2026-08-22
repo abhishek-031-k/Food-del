@@ -7,8 +7,6 @@ A full-stack food delivery web application built using the MERN stack. The appli
 ### Frontend
 https://food-del-c9zq.vercel.app/
 
-### GitHub Repository
-https://github.com/abhishek-031-k/Food-del
 
 ---
 
